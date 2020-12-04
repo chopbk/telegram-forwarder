@@ -1,6 +1,31 @@
 const { MTProto } = require("@mtproto/core");
+const fs = require("fs");
+const my_storage = myStorage("./data/account.json");
+const myStorage = (file_path) => {
+  let storage = {};
+  try {
+    const file_raw = fs.readFileSync(file_path);
+    storage = JSON.parse(file_raw);
+  } catch (e) {}
+
+  const setItem = (key, value) => {
+    //   console.log("storage:set::", key);
+    storage[key] = value;
+    fs.writeFileSync(file_path, JSON.stringify(storage));
+  };
+
+  const getItem = (key) => {
+    return storage[key] || null;
+  };
+
+  return {
+    setItem,
+    getItem,
+  };
+};
 function TelegramApi(options = {}) {
   const mtproto = new MTProto(options);
+  //customLocalStorage: my_storage,
   const api = {
     call(method, params, options = {}) {
       return mtproto.call(method, params, options).catch(async (error) => {
@@ -26,6 +51,7 @@ function TelegramApi(options = {}) {
         return Promise.reject(error);
       });
     },
+    mtproto: mtproto,
   };
 
   return {
@@ -70,6 +96,41 @@ function TelegramApi(options = {}) {
         phone_code_hash: phone_code_hash,
       });
     },
+    getChats: async () => {
+      const dialogs = await api.call("messages.getAllChats", {
+        except_ids: [],
+        offset_peer: {
+          _: "inputPeerEmpty",
+        },
+      });
+      return dialogs.chats;
+    },
+    forwardMessage: async (message, outputChannel) => {
+      const forward = await api.call("messages.forwardMessages", {
+        silent: false,
+        background: false,
+        from_peer: {
+          _: "inputPeerChannelFromMessage",
+          peer: {
+            _: "inputPeerEmpty",
+          },
+          msg_id: message.id,
+          channel_id: message.chatId,
+        },
+        id: message,
+        to_peer: {
+          _: "inputPeerChannel",
+          peer: {
+            _: "inputPeerEmpty",
+          },
+          msg_id: message.id,
+          channel_id: message.chatId,
+        },
+      });
+      console.log(forward);
+      return forward;
+    },
+    mtproto,
   };
 }
 module.exports = TelegramApi;
