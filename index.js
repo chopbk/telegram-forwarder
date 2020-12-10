@@ -13,7 +13,6 @@ const {
   getPassword,
   getNumberChoice,
 } = require("./helper/input");
-
 let telegramApi = new TelegramAPI({
   api_id: api_id,
   api_hash: api_hash,
@@ -52,6 +51,9 @@ const startListen = async () => {
 
     for (const message of newChannelMessages) {
       // printing new channel messages
+      var today = new Date();
+      console.log(today.toISOString());
+
       console.log(`[${message.to_id.channel_id}] ${message.message}`);
     }
   });
@@ -62,8 +64,8 @@ const startListen = async () => {
   if (!user) {
     // The user is not logged in
     console.log("[+] You must log in");
-    const phone_number = await getPhone();
-    const { phone_code_hash } = await telegramApi.sendCode(phone_number);
+    const phone = await getPhone();
+    const { phone_code_hash } = await telegramApi.sendCode(phone);
     const code = await getCode();
     try {
       const authResult = await telegramApi.signIn({
@@ -72,19 +74,29 @@ const startListen = async () => {
         phone_code_hash,
       });
     } catch (error) {
-      if (error.error_message !== "SESSION_PASSWORD_NEEDED") {
-        const { srp_id, current_algo, srp_B } = await telegramApi.getPassword();
-        const { salt1, salt2, g, p } = current_algo;
-        const { A, M1 } = await getSRPParams({
-          g,
-          p,
-          salt1,
-          salt2,
-          gB: srp_B,
-          password: await getPassword(),
-        });
-        await telegramApi.checkPassword({ srp_id, A, M1 });
-        return;
+      console.log(error.error_message);
+      if (error.error_message === "SESSION_PASSWORD_NEEDED") {
+        try {
+          const {
+            srp_id,
+            current_algo,
+            srp_B,
+          } = await telegramApi.getPassword();
+          const { salt1, salt2, g, p } = current_algo;
+          let password = await getPassword();
+          const { A, M1 } = await getSRPParams({
+            g,
+            p,
+            salt1,
+            salt2,
+            gB: srp_B,
+            password: password,
+          });
+          await telegramApi.checkPassword({ srp_id, A, M1 });
+          return;
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
   }

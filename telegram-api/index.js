@@ -1,6 +1,6 @@
 const { MTProto } = require("@mtproto/core");
 const fs = require("fs");
-const my_storage = myStorage("./data/account.json");
+
 const myStorage = (file_path) => {
   let storage = {};
   try {
@@ -23,9 +23,14 @@ const myStorage = (file_path) => {
     getItem,
   };
 };
+const my_storage = myStorage("./data/account.json");
 function TelegramApi(options = {}) {
-  const mtproto = new MTProto(options);
-  //customLocalStorage: my_storage,
+  const mtproto = new MTProto({
+    api_id: options.api_id,
+    api_hash: options.api_hash,
+    customLocalStorage: my_storage,
+  });
+
   const api = {
     call(method, params, options = {}) {
       return mtproto.call(method, params, options).catch(async (error) => {
