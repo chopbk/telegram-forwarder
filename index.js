@@ -43,7 +43,7 @@ const getInputOutputChannel = async () => {
 const startListen = async () => {
   telegramApi.mtproto.updates.on("updates", (data) => {
     let chats = data.chats;
-    if (chats[0].id !== inputInfo.id) return;
+    if (!!chats[0] && chats[0].id !== inputInfo.id) return;
     let updates = data.updates;
     const newChannelMessages = updates
       .filter((update) => update._ === "updateNewChannelMessage")
