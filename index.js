@@ -52,9 +52,10 @@ const startListen = async () => {
     for (const message of newChannelMessages) {
       // printing new channel messages
       var today = new Date();
-      console.log(today.toISOString());
-
-      console.log(`[${message.to_id.channel_id}] ${message.message}`);
+      // console.log(today.toISOString());
+      // console.log(new Date(data.date * 1000).toISOString());
+      console.log(`delay ${data.date * 1000 - today.getTime()}ms`);
+      //console.log(`[${message.to_id.channel_id}] ${message.message}`);
     }
   });
 };

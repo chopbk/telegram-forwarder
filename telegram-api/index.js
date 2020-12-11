@@ -136,6 +136,7 @@ function TelegramApi(options = {}) {
       return forward;
     },
     mtproto,
+    api,
   };
 }
 module.exports = TelegramApi;
